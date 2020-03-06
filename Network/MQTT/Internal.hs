@@ -58,7 +58,7 @@ import Data.Singletons (SingI(..))
 import Data.Singletons.Decide
 import Data.Text (Text)
 import Data.Word (Word16)
-import Network
+import Network.Socket
 import System.IO (Handle, hLookAhead)
 import System.Timeout (timeout)
 

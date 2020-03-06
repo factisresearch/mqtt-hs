@@ -49,8 +49,8 @@ import Control.Monad (void)
 import Data.ByteString (ByteString)
 import Data.Maybe (fromJust)
 import Data.Unique
-import Network
-import System.IO (hSetBinaryMode)
+import Network.Socket
+import System.IO (hSetBinaryMode, IOMode(..))
 
 import Network.MQTT.Internal
 import Network.MQTT.Types
@@ -82,7 +82,11 @@ defaultConfig commands published = Config
 -- Exceptions are propagated.
 run :: Config -> IO Terminated
 run conf = do
-    h <- connectTo (cHost conf) (PortNumber $ cPort conf)
+    let hints = defaultHints { addrSocketType = Stream }
+    addr:_ <- getAddrInfo (Just hints) (Just (cHost conf)) (Just (show (cPort conf)))
+    sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
+    connect sock $ addrAddress addr
+    h <- socketToHandle sock ReadWriteMode
     hSetBinaryMode h True
     terminatedVar <- newEmptyTMVarIO
     sendSignal <- newEmptyMVar
