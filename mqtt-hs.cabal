@@ -1,5 +1,5 @@
 name:                mqtt-hs
-version:             1.1.0
+version:             1.1.1
 synopsis:            A MQTT client library.
 homepage:            http://github.com/k00mi/mqtt-hs
 license:             GPL-3
