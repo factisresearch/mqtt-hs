@@ -50,7 +50,7 @@ import Data.ByteString (ByteString)
 import Data.Maybe (fromJust)
 import Data.Unique
 import Network.Socket
-import System.IO (hSetBinaryMode, IOMode(..))
+import System.IO (IOMode(..), hSetBinaryMode)
 
 import Network.MQTT.Internal
 import Network.MQTT.Types
@@ -82,8 +82,7 @@ defaultConfig commands published = Config
 -- Exceptions are propagated.
 run :: Config -> IO Terminated
 run conf = do
-    let hints = defaultHints { addrSocketType = Stream }
-    addr:_ <- getAddrInfo (Just hints) (Just (cHost conf)) (Just (show (cPort conf)))
+    addr <- resolve (cHost conf) (cPort conf)
     sock <- socket (addrFamily addr) (addrSocketType addr) (addrProtocol addr)
     connect sock $ addrAddress addr
     h <- socketToHandle sock ReadWriteMode
@@ -92,6 +91,12 @@ run conf = do
     sendSignal <- newEmptyMVar
     mainLoop conf h (readTMVar terminatedVar) sendSignal
       `finally` atomically (putTMVar terminatedVar ())
+ where
+    resolve :: String -> PortNumber -> IO AddrInfo
+    resolve server port = do
+        let hints = defaultHints { addrFamily = AF_INET, addrSocketType = Stream }
+        addr:_ <- getAddrInfo (Just hints) (Just server) (Just $ show port)
+        return addr
 
 -- | Close the connection after sending a 'Disconnect' message.
 --
